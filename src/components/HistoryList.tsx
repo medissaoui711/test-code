@@ -14,7 +14,7 @@ export const HistoryList: React.FC<HistoryListProps> = ({ reports, setReports, o
   const { language, t } = useLanguage();
 
   const handleClearHistory = async () => {
-    if (window.confirm('Are you sure you want to clear all history?')) {
+    if (window.confirm(t('dashboard.clearHistoryConfirm'))) {
       setReports([]);
       await clearBackendReports();
     }
@@ -27,9 +27,9 @@ export const HistoryList: React.FC<HistoryListProps> = ({ reports, setReports, o
         {reports.length > 0 && (
           <button 
             onClick={handleClearHistory}
-            className="text-sm text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-medium transition-colors"
+            className="text-sm text-rose-600 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30"
           >
-            Clear History
+            {t('dashboard.clearHistory')}
           </button>
         )}
       </div>

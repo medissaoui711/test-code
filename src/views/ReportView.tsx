@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TestReport, Issue } from '../lib/scanner';
-import { ArrowLeft, AlertOctagon, AlertTriangle, Info, CheckCircle2, Download, FileText, Wrench, ChevronDown, ChevronUp, HelpCircle, Activity, FileWarning, LayoutTemplate, ShieldAlert, CheckSquare, Target } from 'lucide-react';
+import { ArrowLeft, AlertOctagon, AlertTriangle, Info, CheckCircle2, Download, FileText, Code2, FileCode, Wrench, ChevronDown, ChevronUp, HelpCircle, Activity, FileWarning, LayoutTemplate, ShieldAlert, CheckSquare, Target } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ReportViewProps {
@@ -45,12 +45,77 @@ export function ReportView({ report, previousReport, onBack }: ReportViewProps) 
     };
   };
 
-  const handleExport = () => {
+  const handleExportPDF = () => {
+    // Check if running in an iframe (like AI Studio preview)
+    if (window.self !== window.top) {
+      alert(isAr 
+        ? 'بسبب قيود المتصفح في نافذة المعاينة، يرجى فتح التطبيق في نافذة جديدة (Open in new tab) لتتمكن من تصدير ملف PDF عبر خيار الطباعة.' 
+        : 'Due to browser restrictions in the preview window, please open the app in a new tab to export as PDF via the Print option.');
+      return;
+    }
+
     try {
       window.print();
     } catch (e) {
-      alert(isAr ? 'يرجى فتح التطبيق في نافذة جديدة لطباعة التقرير.' : 'Please open the app in a new tab to print the report.');
+      alert(isAr ? 'حدث خطأ أثناء محاولة الطباعة. يرجى المحاولة مرة أخرى.' : 'An error occurred while trying to print. Please try again.');
     }
+  };
+
+  const generateMarkdown = (report: TestReport) => {
+    const avgScore = Math.floor((report.scores.security + report.scores.architecture + report.scores.codeQuality + report.scores.dependencies) / 4);
+    let md = `# Security Analysis Report: ${report.url}\n`;
+    md += `**Date:** ${new Date(report.date).toLocaleString()}\n`;
+    md += `**Score:** ${avgScore}/100\n\n`;
+    
+    md += `## Issues Found (${report.issues.length})\n\n`;
+    report.issues.forEach((issue, index) => {
+      md += `### ${index + 1}. ${issue.title} [${issue.severity.toUpperCase()}]\n`;
+      md += `**Category:** ${issue.category}\n`;
+      md += `**Description:** ${issue.description}\n`;
+      if (issue.file) md += `**File:** ${issue.file}${issue.line ? ` (Line ${issue.line})` : ''}\n`;
+      md += `\n---\n\n`;
+    });
+    
+    return md;
+  };
+
+  const generateText = (report: TestReport) => {
+    const avgScore = Math.floor((report.scores.security + report.scores.architecture + report.scores.codeQuality + report.scores.dependencies) / 4);
+    let text = `SECURITY ANALYSIS REPORT: ${report.url}\n`;
+    text += `==========================================\n`;
+    text += `Date: ${new Date(report.date).toLocaleString()}\n`;
+    text += `Score: ${avgScore}/100\n\n`;
+    
+    text += `ISSUES FOUND: ${report.issues.length}\n`;
+    text += `------------------------------------------\n\n`;
+    report.issues.forEach((issue, index) => {
+      text += `${index + 1}. ${issue.title} [${issue.severity.toUpperCase()}]\n`;
+      text += `Category: ${issue.category}\n`;
+      text += `Description: ${issue.description}\n`;
+      if (issue.file) text += `File: ${issue.file}${issue.line ? ` (Line ${issue.line})` : ''}\n`;
+      text += `\n`;
+    });
+    
+    return text;
+  };
+
+  const downloadFile = (content: string, fileName: string, contentType: string) => {
+    const a = document.createElement('a');
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const handleExportMD = () => {
+    const content = generateMarkdown(report);
+    downloadFile(content, `report-${report.url.replace(/[^a-z0-9]/gi, '-')}.md`, 'text/markdown');
+  };
+
+  const handleExportTXT = () => {
+    const content = generateText(report);
+    downloadFile(content, `report-${report.url.replace(/[^a-z0-9]/gi, '-')}.txt`, 'text/plain');
   };
 
   return (
@@ -64,13 +129,32 @@ export function ReportView({ report, previousReport, onBack }: ReportViewProps) 
           <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
           {isAr ? 'العودة للوحة التحكم' : 'Back to Dashboard'}
         </button>
-        <button 
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all"
-        >
-          <Download className="w-4 h-4" />
-          {t('report.export')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleExportPDF}
+            title={t('report.export.pdf')}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-slate-900 dark:bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-700 transition-all border border-slate-700/50"
+          >
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">PDF</span>
+          </button>
+          <button 
+            onClick={handleExportMD}
+            title={t('report.export.md')}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+          >
+            <Code2 className="w-4 h-4" />
+            <span className="hidden sm:inline">MD</span>
+          </button>
+          <button 
+            onClick={handleExportTXT}
+            title={t('report.export.txt')}
+            className="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700"
+          >
+            <FileCode className="w-4 h-4" />
+            <span className="hidden sm:inline">TXT</span>
+          </button>
+        </div>
       </div>
 
       {/* 1) Overview */}

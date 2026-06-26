@@ -31,7 +31,7 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
           className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all active:scale-95 border border-indigo-500/50"
         >
           <Search className="w-5 h-5" />
-          {isAr ? 'ابدأ فحص مشروعك الأول' : 'Start Your First Scan'}
+          {t('dashboard.startFirst')}
         </button>
       </div>
     );
@@ -67,13 +67,13 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
     <div className="space-y-8 animate-in fade-in duration-300" dir={dir}>
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          {isAr ? 'المركز الأمني' : 'Security Command Center'}
+          {t('dashboard.commandCenter')}
           <div className="flex h-2 w-2 relative">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </div>
         </h1>
-        <p className="text-slate-500 dark:text-slate-400">{isAr ? 'ملخص جودة الكود والأمان عبر جميع المشاريع المفحوصة.' : 'Global overview of code quality and threat landscape across all scanned projects.'}</p>
+        <p className="text-slate-500 dark:text-slate-400">{t('dashboard.globalSummary')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
@@ -83,11 +83,11 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
             <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 flex items-center justify-center">
               <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
             </div>
-            <h3 className="font-medium text-slate-700 dark:text-slate-300">{isAr ? 'مشاكل حرجة' : 'Critical Threats'}</h3>
+            <h3 className="font-medium text-slate-700 dark:text-slate-300">{t('dashboard.criticalThreats')}</h3>
           </div>
           <div className="relative">
             <span className="text-4xl font-bold text-slate-900 dark:text-white font-mono">{totalCritical}</span>
-            <span className="text-sm text-slate-500 dark:text-slate-500 mx-2 uppercase tracking-wider">{isAr ? 'تراكمي' : 'Detected'}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-500 mx-2 uppercase tracking-wider">{t('dashboard.cumulative')}</span>
           </div>
         </div>
 
@@ -97,11 +97,11 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center">
               <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <h3 className="font-medium text-slate-700 dark:text-slate-300">{isAr ? 'إجمالي الفحوصات' : 'Total Scans'}</h3>
+            <h3 className="font-medium text-slate-700 dark:text-slate-300">{t('dashboard.totalScans')}</h3>
           </div>
           <div className="relative">
             <span className="text-4xl font-bold text-slate-900 dark:text-white font-mono">{reports.length}</span>
-            <span className="text-sm text-slate-500 dark:text-slate-500 mx-2 uppercase tracking-wider">{isAr ? 'مشاريع' : 'Projects'}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-500 mx-2 uppercase tracking-wider">{t('dashboard.projects')}</span>
           </div>
         </div>
 
@@ -110,7 +110,7 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="font-medium text-slate-700 dark:text-slate-300">{isAr ? 'متوسط مؤشر الجودة الشامل' : 'Avg Global Quality Score'}</h3>
+            <h3 className="font-medium text-slate-700 dark:text-slate-300">{t('dashboard.avgScore')}</h3>
           </div>
           <div className="h-24 w-full relative z-10" dir="ltr">
             {trendData.length > 1 ? (
@@ -137,7 +137,7 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center text-sm text-slate-400">{isAr ? 'لا توجد بيانات كافية للرسم البياني' : 'Not enough data for chart'}</div>
+              <div className="h-full flex items-center text-sm text-slate-400">{t('report.health.noLarge')}</div>
             )}
           </div>
         </div>
@@ -146,11 +146,11 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950/50">
-            <h3 className="font-semibold text-slate-900 dark:text-white">{isAr ? 'أحدث مشروع مفحوص' : 'Latest Scanned Project'}</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white">{t('dashboard.latestProject')}</h3>
             {latestReport && (
               <span className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 font-mono">
                 <Clock className="w-4 h-4" />
-                {new Date(latestReport.date).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}
+                {new Date(latestReport.date).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
               </span>
             )}
           </div>
@@ -188,19 +188,19 @@ export function Dashboard({ reports, onStartScan, onViewReport }: DashboardProps
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-            <h3 className="font-semibold text-slate-900 dark:text-white">{isAr ? 'إجراءات سريعة' : 'Quick Actions'}</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white">{t('dashboard.quickActions')}</h3>
           </div>
           <div className="p-6 space-y-4">
             <button
               onClick={onStartScan}
-              className={`w-full p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors flex items-start gap-4 group ${isAr ? 'text-right' : 'text-left'}`}
+              className={`w-full p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors flex items-start gap-4 group ${language === 'ar' ? 'text-right' : 'text-left'}`}
             >
               <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/30 transition-colors">
                 <Code2 className="w-5 h-5 text-indigo-700 dark:text-indigo-400" />
               </div>
               <div>
                 <h4 className="font-medium text-slate-900 dark:text-white group-hover:text-indigo-900 dark:group-hover:text-indigo-300 transition-colors">{t('dashboard.startScan')}</h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{isAr ? 'ارفع حزمة ZIP أو أدخل رابط المستودع لفحصه واكتشاف الثغرات.' : 'Upload a ZIP or enter a repository URL to scan for vulnerabilities.'}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{t('dashboard.quickActionDesc')}</p>
               </div>
             </button>
           </div>
