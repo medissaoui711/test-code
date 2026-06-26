@@ -95,28 +95,10 @@ export async function runScan(target: string): Promise<TestReport> {
   }
 
   // Mock Architecture Issues
-  if (scores.architecture < 90) {
-    issues.push({
-      id: 'arch-1',
-      title: 'تداخل في بنية المجلدات',
-      description: 'يوجد خلط بين ملفات واجهة المستخدم وملفات منطق الأعمال (Business Logic) في نفس المجلد، مما يصعب الصيانة.',
-      severity: 'Medium',
-      category: 'Architecture',
-      file: 'src/app/main.ts'
-    });
-  }
+  // (Architecture overlap issues removed per user request)
 
   // Mock Code Quality Issues
   if (scores.codeQuality < 85) {
-    issues.push({
-      id: 'cq-1',
-      title: 'تكرار كود برمجي (Code Duplication)',
-      description: 'تم العثور على كود مكرر في عدة ملفات للتعامل مع طلبات الشبكة. يفضل إنشاء دالة مساعدة (Helper Function) موحدة.',
-      severity: 'Medium',
-      category: 'Code Quality',
-      file: 'src/api/fetch.ts'
-    });
-    
     issues.push({
       id: 'cq-2',
       title: 'متغيرات غير مستخدمة',
@@ -129,16 +111,7 @@ export async function runScan(target: string): Promise<TestReport> {
   }
 
   // Mock Dependencies Issues
-  if (scores.dependencies < 95) {
-    issues.push({
-      id: 'dep-1',
-      title: 'مكتبات قديمة تحتوي على ثغرات معروفة',
-      description: 'المشروع يستخدم إصدارات قديمة من مكتبة مساعدة تحتوي على ثغرات أمنية مصححة في الإصدارات الأحدث. يرجى تحديث حزمة (package.json).',
-      severity: 'High',
-      category: 'Dependencies',
-      file: 'package.json'
-    });
-  }
+  // (Outdated dependencies issues removed per user request)
 
   const overview: OverviewMetrics = {
     fileCount: isBadTarget ? 42 : 128,
@@ -162,13 +135,13 @@ export async function runScan(target: string): Promise<TestReport> {
 
   const plan: DevelopmentPlan = {
     fixNow: [
-      'الملفات الناقصة، الأخطاء الحرجة، الثغرات عالية الخطورة.',
+      'الملفات الناقصة، الأخطاء الحرجة، الثغرات الأمنية المكتشفة.',
     ],
     next: [
-      'التكرار، الملفات الفارغة، التعقيد العالي، تحسين البنية.',
+      'الملفات الفارغة، تحسين جودة الكود، معالجة المتغيرات غير المستخدمة.',
     ],
     later: [
-      'التوثيق، الاختبارات، التحسينات الشكلية، إعادة التنظيم.',
+      'التوثيق، الاختبارات (Unit Tests)، التحسينات الشكلية.',
     ]
   };
 
