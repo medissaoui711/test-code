@@ -1,3 +1,5 @@
+import { simulateNetworkRequest } from './api';
+
 export interface Issue {
   id: string;
   title: string;
@@ -47,7 +49,7 @@ export interface TestReport {
 
 export async function runScan(target: string): Promise<TestReport> {
   // Simulate network delay, unpacking, and processing time
-  await new Promise(resolve => setTimeout(resolve, 15000));
+  await simulateNetworkRequest(null, 15000);
 
   // Generate a mock report based on the target name
   const isBadTarget = target.includes('bad') || target.includes('error');
@@ -147,9 +149,9 @@ export async function runScan(target: string): Promise<TestReport> {
 
   const health: ProjectHealth = {
     emptyFiles: isBadTarget ? ['src/utils/math.ts', 'src/components/Card.tsx'] : [],
-    missingFiles: ['README.md', '.env.example'],
+    missingFiles: isBadTarget ? ['tests/setup.ts'] : [],
     duplicateFiles: isBadTarget ? ['src/hooks/useAuth.ts', 'src/lib/auth.ts'] : [],
-    largeFiles: ['src/App.tsx (800 lines)'],
+    largeFiles: isBadTarget ? ['src/legacy/GodComponent.tsx (1200 lines)'] : [],
   };
 
   const missingParts = [

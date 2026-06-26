@@ -1,12 +1,10 @@
 import { getSessionId } from './session';
 import { TestReport } from './scanner';
+import { simulateNetworkRequest } from './api';
 
 /**
  * Simulates a backend storage queue for reports.
- * In a real application, these functions would be HTTP calls to an API
- * (e.g., POST /api/reports, GET /api/reports).
- * We use sessionStorage here to represent transient, session-scoped data 
- * that does not persist across tab closures, keeping localStorage clean.
+ * In a real application, these functions would be HTTP calls to an API.
  */
 
 export async function saveReportToBackend(report: TestReport): Promise<TestReport[]> {
@@ -14,8 +12,7 @@ export async function saveReportToBackend(report: TestReport): Promise<TestRepor
   const existing = await getReportsFromBackend();
   const updated = [report, ...existing];
   
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await simulateNetworkRequest(updated, 300);
   
   sessionStorage.setItem(`backend_reports_${sessionId}`, JSON.stringify(updated));
   return updated;

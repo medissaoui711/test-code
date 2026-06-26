@@ -13,7 +13,8 @@ TestPilot is an advanced, privacy-first cybersecurity and code-quality command c
 
 TestPilot is built on a **"Zero-Friction, Zero-Trust"** philosophy:
 - **Anonymous-First Sessions:** Users instantly get an isolated workspace upon visit. No mandatory sign-ups, reducing friction while maintaining absolute data segregation.
-- **Session-Isolated State:** Every project, report, and preference is strictly bound to a cryptographic local session. 
+- **Session-Isolated State:** Every project, report, and preference is strictly bound to a cryptographic local session.
+- **Multi-Stage Storage:** Utilizing a hybrid approach with `sessionStorage` for transient backend-simulated data and `localStorage` for persistent non-sensitive preferences.
 - **Transient Processing:** Any server-side data required for analysis is volatile and aggressively garbage-collected within a maximum of 24 hours. No persistent server-side profiles.
 
 ## ✨ Core Capabilities
