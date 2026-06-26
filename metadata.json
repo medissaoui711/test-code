@@ -1,0 +1,6 @@
+{
+  "name": "TestPilot",
+  "description": "Automated QA and testing dashboard providing actionable insights and quick fixes for non-technical teams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

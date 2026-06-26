@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-grid: rgba(0, 0, 0, 0.03);
+  }
+  .dark {
+    --bg-grid: rgba(255, 255, 255, 0.03);
+    color-scheme: dark;
+  }
+  
+  /* Smooth theme transitions, respecting reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    *, *::before, *::after {
+      transition-property: background-color, border-color, color, fill, stroke;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 300ms;
+    }
+  }
+
+  /* Clear focus states for keyboard navigation */
+  *:focus-visible {
+    outline: 2px solid theme('colors.indigo.500');
+    outline-offset: 2px;
+  }
+  .dark *:focus-visible {
+    outline-color: theme('colors.indigo.400');
+  }
+}
+
+@layer utilities {
+  .bg-cyber-grid {
+    background-size: 40px 40px;
+    background-image: 
+      linear-gradient(to right, var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--bg-grid) 1px, transparent 1px);
+  }
+  
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}
+
+@media print {
+  aside {
+    display: none !important;
+  }
+  header {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
+}
