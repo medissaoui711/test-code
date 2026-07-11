@@ -10,7 +10,7 @@ export function Changelog() {
     {
       version: isAr ? 'v0.9.0 (إطلاق النسخة التجريبية)' : 'v0.9.0 (Beta Release)',
       date: isAr ? 'اليوم' : 'Today',
-      icon: <Rocket className="w-5 h-5 text-indigo-600" />,
+      icon: <Rocket className="w-5 h-5 text-cyan-600" />,
       changes: isAr ? [
         'إطلاق برنامج النسخة التجريبية (بيتا) للمستخدمين الأوائل.',
         'إضافة إمكانيات تصدير PDF مباشرة من واجهة التقرير.',
@@ -70,31 +70,31 @@ export function Changelog() {
   return (
     <div className="max-w-3xl mx-auto py-8 animate-in fade-in" dir={dir}>
       <div className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-slate-900 mb-4">{t('changelog.title')}</h1>
-        <p className="text-lg text-slate-600">{t('changelog.desc')}</p>
+        <h1 className="text-3xl font-bold text-zinc-900 mb-4">{t('changelog.title')}</h1>
+        <p className="text-lg text-zinc-600">{t('changelog.desc')}</p>
       </div>
 
       <div className="space-y-8">
         {updates.map((update, index) => (
-          <div key={index} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
-            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+          <div key={index} className="tech-panel p-6 sm:p-8">
+            <div className="flex items-center justify-between mb-6 border-b border-zinc-100 pb-4">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${
-                  index === 0 ? 'bg-indigo-50' : 
+                <div className={`p-2 rounded-sm ${
+                  index === 0 ? 'bg-cyan-50' : 
                   index === 1 ? 'bg-emerald-50' : 
                   index === 2 ? 'bg-rose-50' : 'bg-amber-50'
                 }`}>
                   {update.icon}
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">{update.version}</h2>
+                <h2 className="text-xl font-bold text-zinc-900">{update.version}</h2>
               </div>
-              <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">{update.date}</span>
+              <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-200 dark:bg-zinc-800 px-3 py-1 font-mono text-xs uppercase tracking-widest">{update.date}</span>
             </div>
             
             <ul className="space-y-3">
               {update.changes.map((change, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-700">
-                  <span className="text-slate-300 mt-1.5 shrink-0">•</span>
+                <li key={i} className="flex items-start gap-3 text-zinc-700">
+                  <span className="text-zinc-300 mt-1.5 shrink-0">•</span>
                   <span className="leading-relaxed">{change}</span>
                 </li>
               ))}

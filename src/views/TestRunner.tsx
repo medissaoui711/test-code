@@ -1,25 +1,68 @@
 import React, { useState } from 'react';
 import { Search, Loader2, Upload, FileArchive, Link as LinkIcon, Code2 } from 'lucide-react';
-import { runScan, TestReport } from '../lib/scanner';
+import { runScan, TestReport, FileData } from '../lib/scanner';
 import { useLanguage } from '../contexts/LanguageContext';
+import JSZip from 'jszip';
 
 interface TestRunnerProps {
   onComplete: (report: TestReport) => void;
+  initialType?: 'url' | 'file';
+  initialUrl?: string;
 }
 
-export function TestRunner({ onComplete }: TestRunnerProps) {
+export function TestRunner({ onComplete, initialType = 'url', initialUrl = '' }: TestRunnerProps) {
   const { t, language } = useLanguage();
   const isAr = language === 'ar';
 
-  const [inputType, setInputType] = useState<'url' | 'file'>('url');
-  const [url, setUrl] = useState('');
+  const [inputType, setInputType] = useState<'url' | 'file'>(initialType);
+  const [url, setUrl] = useState(initialUrl);
   const [file, setFile] = useState<File | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [progressText, setProgressText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
+  React.useEffect(() => {
+    setInputType(initialType);
+    setUrl(initialUrl);
+    
+    if (initialType === 'url' && initialUrl) {
+      setIsScanning(true);
+      setError(null);
+      setProgressText(t('testrunner.step1'));
+
+      const autoScan = async () => {
+        try {
+          const progressSteps = [
+            t('testrunner.step1'),
+            t('testrunner.step2'),
+            t('testrunner.step3'),
+            t('testrunner.step4')
+          ];
+
+          let stepIndex = 0;
+          const progressInterval = setInterval(() => {
+            stepIndex++;
+            if (stepIndex < progressSteps.length) {
+              setProgressText(progressSteps[stepIndex]);
+            }
+          }, 3000);
+
+          const report = await runScan(initialUrl);
+          clearInterval(progressInterval);
+          onComplete(report);
+        } catch (err: any) {
+          console.error(err);
+          setError(err.message || (isAr ? 'حدث خطأ أثناء فحص المشروع.' : 'An error occurred during project scanning.'));
+        } finally {
+          setIsScanning(false);
+        }
+      };
+      autoScan();
+    }
+  }, [initialType, initialUrl]);
+
+  const handleScan = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (inputType === 'url' && !url) return;
     if (inputType === 'file' && !file) return;
 
@@ -43,13 +86,71 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
         }
       }, 3000);
 
-      // Pass either url or file name to the scanner
-      const target = inputType === 'url' ? url : (file ? file.name : 'Unknown File');
-      const report = await runScan(target);
+      if (inputType === 'file' && file) {
+        setProgressText(isAr ? 'جاري فك ضغط الملف وقراءة الكود...' : 'Unpacking & Reading Code...');
+        const zip = new JSZip();
+        const zipContent = await zip.loadAsync(file);
+        const filePromises: Promise<void>[] = [];
+        const files: FileData[] = [];
+        let totalFilesCount = 0;
+        let totalLinesCount = 0;
 
-      clearInterval(progressInterval);
-      onComplete(report);
+        zipContent.forEach((path, zipFile) => {
+          if (!zipFile.dir && !path.includes('node_modules') && !path.includes('.git')) {
+            totalFilesCount++;
+            const promise = zipFile.async('string').then(content => {
+              totalLinesCount += content.split('\n').length;
+              // Only send source files and reasonable sizes for AI analysis
+              if (content.length < 100000 && (
+                path.endsWith('.ts') || 
+                path.endsWith('.tsx') || 
+                path.endsWith('.js') || 
+                path.endsWith('.jsx') || 
+                path.endsWith('.json') || 
+                path.endsWith('.md') || 
+                path.endsWith('.py') ||
+                path.includes('requirements.txt') ||
+                path.includes('Dockerfile') ||
+                path.includes('env')
+              )) {
+                // Prioritize core files (config, models, entry points)
+                const isPriority = 
+                  path.includes('config') || 
+                  path.includes('main') || 
+                  path.includes('app') || 
+                  path.includes('server') || 
+                  path.includes('models') ||
+                  path.includes('schema');
+                
+                if (isPriority) {
+                  files.unshift({ path, content });
+                } else {
+                  files.push({ path, content });
+                }
+              }
+            });
+            filePromises.push(promise);
+          }
+        });
+
+        await Promise.all(filePromises);
+        
+        // Pass the REAL metrics to the scanner
+        const report = await runScan(file.name, files.slice(0, 50), {
+          fileCount: totalFilesCount,
+          linesOfCode: totalLinesCount
+        });
+
+        clearInterval(progressInterval);
+        onComplete(report);
+      } else {
+        // For URL input, we still rely on fallback/simulated metrics for now
+        const report = await runScan(url);
+        clearInterval(progressInterval);
+        onComplete(report);
+      }
     } catch (err: any) {
+      console.error(err);
       setError(err.message || (isAr ? 'حدث خطأ أثناء فحص المشروع.' : 'An error occurred during project scanning.'));
     } finally {
       setIsScanning(false);
@@ -72,29 +173,29 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
   return (
     <div className="max-w-2xl mx-auto mt-12">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{t('testrunner.title')}</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-lg">
+        <h1 className="text-3xl font-bold font-mono uppercase tracking-tight text-zinc-900 dark:text-zinc-50 mb-4">{t('testrunner.title')}</h1>
+        <p className="text-zinc-500 dark:text-zinc-400 font-mono text-sm uppercase">
           {t('testrunner.desc')}
         </p>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+      <div className="tech-panel p-6 relative group transition-colors">
         <div className="absolute inset-0 bg-cyber-grid opacity-10 pointer-events-none" />
-        <div className="relative z-10 flex gap-4 mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="relative z-10 flex gap-4 mb-8 border-b border-[var(--border-grid)] pb-6">
           <button
             type="button"
             onClick={() => setInputType('url')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${inputType === 'url' ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+            className={inputType === 'url' ? 'tech-button-primary' : 'tech-button'}
           >
-            <LinkIcon className="w-5 h-5" />
+            <LinkIcon className="w-4 h-4" />
             {t('testrunner.urlTab')}
           </button>
           <button
             type="button"
             onClick={() => setInputType('file')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${inputType === 'file' ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+            className={inputType === 'file' ? 'tech-button-primary' : 'tech-button'}
           >
-            <Upload className="w-5 h-5" />
+            <Upload className="w-4 h-4" />
             {t('testrunner.zipTab')}
           </button>
         </div>
@@ -103,24 +204,24 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
           {inputType === 'url' ? (
             <div className="relative mb-6">
               <div className={`absolute inset-y-0 ${isAr ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
-                <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+                <Search className="h-5 w-5 text-[var(--accent-cyber)]" />
               </div>
               <input
-                type="url"
+                type="text"
                 id="url"
                 required
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={isScanning}
                 dir="ltr"
-                className={`block w-full ${isAr ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4 text-left'} py-4 border border-slate-300 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 sm:text-sm transition-shadow disabled:bg-slate-50 dark:disabled:bg-slate-900 disabled:text-slate-500 dark:disabled:text-slate-600 font-mono`}
+                className={`tech-input w-full ${isAr ? 'pr-12 text-right' : 'pl-12 text-left'} py-4 font-mono text-sm uppercase disabled:opacity-50`}
                 placeholder={t('testrunner.urlPlaceholder')}
               />
             </div>
           ) : (
-            <div className="mb-6">
+            <div className="mb-8">
               <label 
-                className={`block border-2 border-dashed rounded-xl p-8 text-center transition-colors ${isScanning ? 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 cursor-pointer'}`}
+                className={`block border border-dashed border-[var(--border-grid)] p-10 text-center transition-colors rounded-[var(--radius-sharp)] ${isScanning ? 'bg-[var(--bg-secondary)] cursor-not-allowed opacity-50' : 'bg-[var(--bg-primary)] hover:border-[var(--accent-cyber)] cursor-pointer'}`}
               >
                 <input 
                   type="file" 
@@ -131,13 +232,13 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
                 />
                 {file ? (
                   <div className="flex flex-col items-center">
-                    <FileArchive className="w-12 h-12 text-indigo-500 dark:text-indigo-400 mb-3" />
-                    <span className="font-medium text-slate-900 dark:text-white font-mono" dir="ltr">{file.name}</span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-mono">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    <FileArchive className="w-12 h-12 text-[var(--accent-cyber)] mb-4" />
+                    <span className="font-bold font-mono text-lg tracking-tight text-[var(--text-primary)]" dir="ltr">{file.name}</span>
+                    <span className="text-xs text-[var(--text-muted)] mt-2 font-mono uppercase tracking-widest">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                     <button 
                       type="button" 
                       onClick={(e) => { e.preventDefault(); setFile(null); }} 
-                      className="mt-4 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                      className="tech-button mt-6 text-xs"
                       disabled={isScanning}
                     >
                       {isAr ? 'إزالة الملف' : 'Remove File'}
@@ -145,9 +246,9 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <Upload className="w-12 h-12 text-slate-400 dark:text-slate-500 mb-3" />
-                    <span className="font-medium text-slate-900 dark:text-white">{t('testrunner.zipPrompt')}</span>
-                    <span className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('testrunner.zipFormat')}</span>
+                    <Upload className="w-12 h-12 text-[var(--text-muted)] mb-4" />
+                    <span className="font-mono font-bold text-[var(--text-primary)] uppercase tracking-widest">{t('testrunner.zipPrompt')}</span>
+                    <span className="text-xs text-[var(--text-muted)] mt-2 font-mono uppercase">{t('testrunner.zipFormat')}</span>
                   </div>
                 )}
               </label>
@@ -155,40 +256,43 @@ export function TestRunner({ onComplete }: TestRunnerProps) {
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-xl text-rose-700 dark:text-rose-400 text-sm font-medium">
-              {error}
+            <div className="mb-8 p-4 bg-[var(--bg-secondary)] border-l-4 border-[var(--signal-fail)] text-[var(--signal-fail)] font-mono text-sm font-bold uppercase tracking-wide rounded-r-[var(--radius-sharp)]">
+              [ERROR] {error}
             </div>
           )}
 
           <button
             type="submit"
             disabled={isScanning || (inputType === 'url' ? !url : !file)}
-            className="w-full flex justify-center py-4 px-4 border border-indigo-500/50 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.2)] text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full tech-button-primary py-4 text-base tracking-[0.2em] font-bold group disabled:opacity-50 disabled:pointer-events-none"
           >
             {isScanning ? (
-              <span className="flex items-center">
-                <Loader2 className={`w-5 h-5 ${isAr ? 'ml-2' : 'mr-2'} animate-spin`} />
+              <span className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin" />
                 {t('testrunner.scanning')}
               </span>
             ) : (
-              t('testrunner.startScan')
+              <span className="flex items-center gap-3">
+                <Code2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                {t('testrunner.startScan')}
+              </span>
             )}
           </button>
         </form>
 
         {isScanning && (
-          <div className="mt-8 text-center animate-in fade-in duration-500 relative z-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 mb-4 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-              <Code2 className="w-8 h-8 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+          <div className="mt-10 text-center animate-in fade-in duration-300 relative z-10 border-t border-[var(--border-grid)] pt-8">
+            <div className="inline-flex items-center justify-center gap-2 mb-6 bg-[var(--bg-secondary)] border border-[var(--accent-cyber)] px-4 py-2 text-[var(--accent-cyber)] font-mono text-xs font-bold uppercase tracking-widest rounded-[var(--radius-sharp)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--accent-cyber)] animate-pulse" />
+              SYS.SCANNING
             </div>
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white">{isAr ? 'جاري التحليل والفحص' : 'Scanning & Analyzing'}</h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-1 font-mono text-sm">{progressText}</p>
-            <div className="mt-6 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden border border-slate-200 dark:border-slate-700">
-              <div className="bg-indigo-600 dark:bg-indigo-500 h-1.5 rounded-full animate-pulse relative" style={{ width: '60%' }}>
-                <div className="absolute top-0 right-0 bottom-0 left-0 bg-gradient-to-r from-transparent to-white/50 dark:to-white/20 animate-[shimmer_2s_infinite]"></div>
-              </div>
+            
+            <h3 className="text-xl font-bold font-mono text-[var(--text-primary)] uppercase tracking-widest">{isAr ? 'جاري التحليل والفحص' : 'Scanning & Analyzing'}</h3>
+            <p className="text-[var(--text-muted)] mt-2 font-mono text-sm uppercase">{progressText}</p>
+            <div className="mt-8 tech-progress-block relative overflow-hidden">
+              <div className="tech-progress-chunk w-[10%] animate-scanline absolute left-0" style={{animation: 'scan 2s ease-in-out infinite'}} />
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-4 uppercase tracking-wider font-bold">{isAr ? 'قد تستغرق العملية وقتاً بناءً على حجم المشروع' : 'This may take some time depending on project size'}</p>
+            <p className="text-[10px] text-[var(--text-muted)] mt-6 uppercase font-mono tracking-[0.3em] font-bold">{isAr ? 'قد تستغرق العملية وقتاً بناءً على حجم المشروع' : 'This may take some time depending on project size'}</p>
           </div>
         )}
       </div>

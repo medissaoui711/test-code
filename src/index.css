@@ -1,45 +1,180 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-@layer base {
-  :root {
-    --bg-grid: rgba(0, 0, 0, 0.03);
-  }
-  .dark {
-    --bg-grid: rgba(255, 255, 255, 0.03);
-    color-scheme: dark;
-  }
-  
-  /* Smooth theme transitions, respecting reduced motion */
-  @media (prefers-reduced-motion: no-preference) {
-    *, *::before, *::after {
-      transition-property: background-color, border-color, color, fill, stroke;
-      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      transition-duration: 300ms;
-    }
-  }
+@theme {
+  --animate-flow-line: flow-line 2s linear infinite;
 
-  /* Clear focus states for keyboard navigation */
-  *:focus-visible {
-    outline: 2px solid theme('colors.indigo.500');
-    outline-offset: 2px;
-  }
-  .dark *:focus-visible {
-    outline-color: theme('colors.indigo.400');
+  @keyframes flow-line {
+    0% { stroke-dashoffset: 24; }
+    100% { stroke-dashoffset: 0; }
   }
 }
 
-@layer utilities {
-  .bg-cyber-grid {
-    background-size: 40px 40px;
-    background-image: 
-      linear-gradient(to right, var(--bg-grid) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--bg-grid) 1px, transparent 1px);
+/* ==========================================================================
+   1. DESIGN TOKENS (CSS VARIABLES) - PRECISION TECH SYSTEM
+   ========================================================================== */
+@layer base {
+  :root {
+    /* Base Surfaces (Zinc Palette) */
+    --bg-primary: #f4f6f8;      /* Zinc-50 (ورقي مطفي تكتيكي) */
+    --bg-secondary: #e4e4e7;    /* Zinc-200 */
+    --bg-terminal: #09090b;     /* Zinc-950 للـ Console دائمًا */
+    
+    /* Text & Contrasts */
+    --text-primary: #09090b;    /* Zinc-950 */
+    --text-secondary: #52525b;  /* Zinc-600 */
+    --text-muted: #71717a;      /* Zinc-500 */
+    
+    /* Layout Borders (Visible Grid Lines) */
+    --border-grid: #d4d4d8;     /* Zinc-300 */
+    --border-active: #09090b;   /* Zinc-950 */
+
+    /* Core Accents & Semantic Signals (Cyber Neo-Neon) */
+    --accent-cyber: #06b6d4;    /* Cyber Cyan (أزرق سيبراني تكتيكي) */
+    --signal-pass: #10b981;     /* Emerald Green */
+    --signal-warn: #f59e0b;     /* Cyber Amber/Orange */
+    --signal-fail: #ef4444;     /* Signal Crimson */
+
+    /* Geometry */
+    --radius-sharp: 2px;        /* حواف هندسية حادة جداً */
+  }
+
+  .dark {
+    /* Base Surfaces */
+    --bg-primary: #09090b;      /* Zinc-950 (عميق جداً لغرف العمليات) */
+    --bg-secondary: #18181b;    /* Zinc-900 */
+    --bg-terminal: #020202;     /* أسود مطلق للكونسول */
+    
+    /* Text & Contrasts */
+    --text-primary: #fafafa;    /* Zinc-50 */
+    --text-secondary: #a1a1aa;  /* Zinc-400 */
+    --text-muted: #71717a;      /* Zinc-500 */
+    
+    /* Layout Borders */
+    --border-grid: #27272a;     /* Zinc-800 خطوط الشبكة المرئية */
+    --border-active: #fafafa;   /* Zinc-50 */
+    
+    /* Accents stay sharp in dark mode */
+    --accent-cyber: #22d3ee;    /* Cyan-400 مضيء */
+    
+    color-scheme: dark;
+  }
+
+  /* Snappy, functional transitions */
+  @media (prefers-reduced-motion: no-preference) {
+    *, *::before, *::after {
+      transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+      transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+      transition-duration: 150ms;
+    }
+  }
+
+  body {
+    @apply bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased selection:bg-[var(--accent-cyber)] selection:text-black;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* ==========================================================================
+   2. CUSTOM CORE COMPONENTS (COMPONENTS LAYER)
+   ========================================================================== */
+@layer components {
+  
+  /* الشبكة التقنية المرئية واللوحات الحادة */
+  .tech-grid-layout {
+    @apply grid border-[var(--border-grid)] divide-y divide-x divide-[var(--border-grid)];
+  }
+
+  .tech-panel {
+    @apply bg-[var(--bg-secondary)] border border-[var(--border-grid)] rounded-[var(--radius-sharp)] transition-all duration-150 ease-in-out;
+  }
+
+  /* الأزرار الميكانيكية التكتيكية */
+  .tech-button {
+    @apply font-mono uppercase tracking-widest text-xs px-4 py-2 border border-[var(--border-grid)] flex items-center justify-center gap-2
+           bg-[var(--bg-secondary)] text-[var(--text-primary)] rounded-[var(--radius-sharp)]
+           transition-all duration-150 ease-out select-none cursor-pointer
+           hover:border-[var(--border-active)] hover:bg-[var(--bg-primary)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyber)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)]
+           active:scale-[0.98];
+  }
+
+  .tech-button-primary {
+    @apply font-mono uppercase tracking-widest text-xs px-4 py-2 border border-[var(--accent-cyber)] flex items-center justify-center gap-2
+           bg-transparent text-[var(--accent-cyber)] rounded-[var(--radius-sharp)]
+           transition-all duration-150 ease-out select-none cursor-pointer
+           hover:bg-[var(--accent-cyber)] hover:text-black hover:shadow-[4px_4px_0px_rgba(6,182,212,0.15)]
+           focus:outline-none focus:ring-2 focus:ring-[var(--accent-cyber)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)]
+           active:scale-[0.98];
+  }
+
+  .tech-button-danger {
+    @apply font-mono uppercase tracking-widest text-xs px-4 py-2 border border-[var(--signal-fail)] flex items-center justify-center gap-2
+           bg-transparent text-[var(--signal-fail)] rounded-[var(--radius-sharp)]
+           transition-all duration-150 ease-out select-none cursor-pointer
+           hover:bg-[var(--signal-fail)] hover:text-black
+           focus:outline-none focus:ring-2 focus:ring-[var(--signal-fail)] focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)]
+           active:scale-[0.98];
+  }
+
+  /* حقول الإدخال الحادة الصارمة */
+  .tech-input {
+    @apply font-mono text-sm px-3 py-2 bg-[var(--bg-secondary)] text-[var(--text-primary)] 
+           border border-[var(--border-grid)] rounded-[var(--radius-sharp)] transition-all duration-150
+           placeholder:text-[var(--text-muted)]
+           focus:outline-none focus:border-[var(--accent-cyber)] focus:ring-1 focus:ring-[var(--accent-cyber)];
+  }
+
+  /* لوحة الـ Terminal والمراقبة الحية (Console) */
+  .tech-console {
+    @apply bg-[var(--bg-terminal)] text-[var(--signal-pass)] font-mono text-xs p-4 
+           border border-[var(--border-grid)] rounded-[var(--radius-sharp)] overflow-y-auto 
+           leading-relaxed shadow-inner;
+  }
+
+  /* الشارات البرمجية المقتضبة */
+  .tech-badge-pass {
+    @apply font-mono text-[10px] font-bold px-2 py-0.5 border border-[var(--signal-pass)] bg-[rgba(16,185,129,0.1)] text-[var(--signal-pass)] rounded-[var(--radius-sharp)];
+  }
+
+  .tech-badge-warn {
+    @apply font-mono text-[10px] font-bold px-2 py-0.5 border border-[var(--signal-warn)] bg-[rgba(245,158,11,0.1)] text-[var(--signal-warn)] rounded-[var(--radius-sharp)];
+  }
+
+  .tech-badge-fail {
+    @apply font-mono text-[10px] font-bold px-2 py-0.5 border border-[var(--signal-fail)] bg-[rgba(239,68,68,0.1)] text-[var(--signal-fail)] rounded-[var(--radius-sharp)];
+  }
+
+  /* شريط التحميل المقسم (Segmented Progress Bar) */
+  .tech-progress-block {
+    @apply h-2 w-full bg-[var(--bg-secondary)] border border-[var(--border-grid)] p-[1px] flex gap-[2px];
   }
   
-  @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
+  .tech-progress-chunk {
+    @apply h-full bg-[var(--accent-cyber)] transition-all duration-300;
+  }
+}
+
+/* ==========================================================================
+   3. UTILITIES & ANIMATIONS LAYER (TACTICAL MICRO-INTERACTIONS)
+   ========================================================================== */
+@layer utilities {
+  /* خلفية الشبكة الهندسية المتقاطعة (Matrix background) */
+  .cyber-grid-bg {
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, var(--border-grid) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border-grid) 1px, transparent 1px);
+  }
+
+  /* حركة خط المسح الضوئي الأنالوج للـ Loading */
+  .animate-scanline {
+    animation: scanline-move 2s linear infinite;
+  }
+
+  @keyframes scanline-move {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
   }
 }
 

@@ -1,0 +1,48 @@
+# ==============================================================================
+# Tutti Configuration & AI Agent Guidelines
+# ==============================================================================
+# This file provides critical context, architectural guidelines, and styling rules 
+# for any AI models or agents analyzing, refactoring, or modifying this codebase.
+# It ensures consistency without needing to repeat prompts in every conversation.
+
+[project]
+name = "TestPilot"
+description = "Automated AI-generated code quality & security testing platform."
+purpose = "Analyze code repositories, generate technical audit reports, and detect vulnerabilities."
+primary_language = "TypeScript"
+target_environment = "Web (Modern Browsers)"
+
+[tech_stack]
+frontend = "React 18"
+build_tool = "Vite"
+styling = "Tailwind CSS (v4)"
+icons = "lucide-react"
+charts = "recharts"
+backend = "Node.js / Express (via server.ts)"
+
+[architecture]
+pattern = "Single Page Application (SPA) with a lightweight Express backend."
+state_management = "React Context API (LanguageContext, ThemeContext) and local React State."
+components = "Strictly Functional Components with React Hooks."
+i18n = "Bilingual (English & Arabic) supporting dynamic RTL/LTR layouts."
+
+[styling_rules]
+theme_engine = "Tailwind Dark Mode via custom variant class strategy (@custom-variant dark)."
+design_system = "Minimalist, high-contrast, technical interface."
+primary_colors = "Zinc (neutrals), Cyan (primary accents)."
+status_colors = "Rose (Critical/Error), Emerald (Secure/Success), Amber (Warning)."
+
+[custom_css_classes]
+# Custom Tailwind utilities defined in src/index.css
+tech_panel = "Standard container style (bg-zinc-100/50 dark:bg-zinc-900/50, border-zinc-300 dark:border-zinc-800, backdrop-blur)."
+tech_button = "Secondary action button style."
+tech_button_primary = "Primary call-to-action button style."
+
+[ai_directives]
+# CRITICAL INSTRUCTIONS FOR AI AGENTS
+rule_1 = "Bilingual Support: All new text MUST use the `useLanguage` hook (`t()` for translations or `isAr` for inline conditionals). Never hardcode English-only text."
+rule_2 = "Responsive Design: Maintain the mobile-first approach. Ensure the `BottomNav` is used on mobile (`md:hidden`) and `Sidebar` on desktop (`hidden md:flex`)."
+rule_3 = "Aesthetic Constraint: Maintain the brutalist/technical aesthetic. Do not add unsolicited gradients, soft rounded corners, or excessive animations. Stick to `rounded-sm`."
+rule_4 = "Styling Discipline: Use Tailwind CSS exclusively. Do not write inline styles or create new CSS files."
+rule_5 = "Dark Mode Support: Always implement dark mode variants (`dark:bg-...`, `dark:text-...`) for every new UI element."
+rule_6 = "Clean Code: Prioritize modularity. Keep components small, use Lucide icons, and avoid monolithic files."

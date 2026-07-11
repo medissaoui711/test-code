@@ -1,6 +1,8 @@
-import React from 'react';
-import { Menu, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronRight, Activity, Search, Settings, Moon, Sun, Monitor, Globe, HelpCircle, ListIcon, ShieldCheck, X, Menu, LayoutDashboard, History, Info, Send } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -10,18 +12,20 @@ interface HeaderProps {
   currentReportId: string | null;
   currentReportUrl?: string;
   activeTab: string;
+  onTabClick: (tab: any) => void;
+  onSearchClick: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  isSidebarOpen,
-  setIsSidebarOpen,
-  isDesktopSidebarOpen,
-  setIsDesktopSidebarOpen,
   currentReportId,
   currentReportUrl,
   activeTab,
+  onTabClick,
+  onSearchClick,
 }) => {
-  const { language, dir, t } = useLanguage();
+  const { language, setLanguage, dir, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const [showSettings, setShowSettings] = useState(false);
   const isAr = language === 'ar';
 
   const getTabLabel = () => {
@@ -32,37 +36,166 @@ export const Header: React.FC<HeaderProps> = ({
       case 'how-it-works': return t('nav.howItWorks');
       case 'changelog': return t('nav.changelog');
       case 'legal': return t('nav.legal');
+      case 'about': return isAr ? 'من نحن' : 'About Us';
+      case 'faq': return isAr ? 'الأسئلة الشائعة' : 'FAQ';
+      case 'contact': return isAr ? 'تواصل معنا' : 'Contact Us';
+      case 'integrations': return t('nav.integrations');
+      case 'file-picker': return t('nav.filePicker');
       default: return '';
     }
   };
 
   return (
-    <header className="h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center px-4 md:px-6 shrink-0 print:hidden justify-between z-10 sticky top-0" dir={dir}>
-      <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 font-medium w-full">
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="md:hidden p-2 mr-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-          aria-label="Open Sidebar"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setIsDesktopSidebarOpen(!isDesktopSidebarOpen)}
-          className="hidden md:block p-2 mr-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
-          aria-label="Toggle Sidebar"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <span className="hidden sm:inline">{t('nav.brand')}</span>
-        <ChevronRight className={`hidden sm:block w-4 h-4 mx-2 ${isAr ? 'rotate-180' : ''}`} />
+    <>
+    <header className="h-16 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 flex items-center px-4 md:px-6 shrink-0 print:hidden justify-between z-50 sticky top-0" dir={dir}>
+      <div className="flex items-center text-xs font-mono uppercase tracking-widest text-zinc-500 dark:text-zinc-400 font-medium w-full">
+        <span className="inline">{t('nav.brand')}</span>
+        <span className="hidden sm:block mx-2 text-zinc-300 dark:text-zinc-700">/</span>
         {currentReportId ? (
-          <span className="text-slate-900 dark:text-white truncate max-w-[200px] md:max-w-md">Report: {currentReportUrl}</span>
+          <span className="hidden sm:inline text-zinc-900 dark:text-zinc-100 truncate max-w-[200px] md:max-w-md">Report: {currentReportUrl}</span>
         ) : (
-          <span className="text-slate-900 dark:text-white capitalize truncate">
+          <span className="hidden sm:inline text-zinc-900 dark:text-zinc-100 truncate">
             {getTabLabel()}
           </span>
         )}
       </div>
+
+      <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-700 dark:text-cyan-400 text-[10px] font-mono font-bold uppercase tracking-wider">
+          <Activity className="w-3.5 h-3.5 animate-pulse" />
+          <span>SYS.ONLINE</span>
+        </div>
+        
+        <div 
+          onClick={onSearchClick}
+          className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-mono group hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer active:scale-95"
+          title={isAr ? 'البحث عن الصفحات والمشاريع' : 'Search pages and projects'}
+        >
+          <Search className="w-3.5 h-3.5 text-zinc-500 group-hover:text-cyan-500 transition-colors" />
+          <span className="group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">{isAr ? '⌘K للبحث' : 'CMD+K'}</span>
+        </div>
+
+        <div className="flex items-center md:hidden gap-1">
+          <button 
+            onClick={onSearchClick}
+            className="p-2 text-zinc-500 hover:text-cyan-500 transition-colors"
+            title={isAr ? 'البحث' : 'Search'}
+          >
+            <Search className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
     </header>
+
+    <AnimatePresence>
+      {showSettings && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 dark:bg-black/40 z-[100] backdrop-blur-sm" 
+            onClick={() => setShowSettings(false)} 
+          />
+          <motion.div
+            initial={{ x: isAr ? '-100%' : '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: isAr ? '-100%' : '100%' }}
+            transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+            className={`fixed top-0 bottom-0 w-72 bg-zinc-50 dark:bg-zinc-950 border-${isAr ? 'r' : 'l'} border-zinc-200 dark:border-zinc-800 shadow-2xl z-[110] flex flex-col ${isAr ? 'left-0' : 'right-0'}`}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+              <span className="font-mono text-sm font-bold uppercase tracking-widest text-zinc-900 dark:text-zinc-100">{t('nav.settings')}</span>
+              <button onClick={() => setShowSettings(false)} className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto py-4 space-y-1">
+              <div className="px-4 pb-2">
+                <p className="font-mono text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">{t('nav.navigation')}</p>
+              </div>
+              <button onClick={() => { onTabClick('dashboard'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'dashboard' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <LayoutDashboard className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.home')}</span>
+              </button>
+              <button onClick={() => { onTabClick('runner'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'runner' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <Search className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('dashboard.startScan')}</span>
+              </button>
+              <button onClick={() => { onTabClick('history'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'history' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <History className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('dashboard.recentScans')}</span>
+              </button>
+              <button onClick={() => { onTabClick('integrations'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'integrations' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <Globe className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.integrations')}</span>
+              </button>
+              <button onClick={() => { onTabClick('file-picker'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'file-picker' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <Search className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.filePicker')}</span>
+              </button>
+
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-4 mx-4" />
+
+              <div className="px-4 pb-2">
+                <p className="font-mono text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">{t('nav.pages')}</p>
+              </div>
+              <button onClick={() => { onTabClick('how-it-works'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'how-it-works' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <HelpCircle className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.howItWorks')}</span>
+              </button>
+              <button onClick={() => { onTabClick('changelog'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'changelog' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <ListIcon className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.changelog')}</span>
+              </button>
+              <button onClick={() => { onTabClick('legal'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'legal' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <ShieldCheck className="w-5 h-5" />
+                <span className="font-mono text-xs">{t('nav.legal')}</span>
+              </button>
+              <button onClick={() => { onTabClick('about'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'about' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <Info className="w-5 h-5" />
+                <span className="font-mono text-xs">{isAr ? 'من نحن' : 'About Us'}</span>
+              </button>
+              <button onClick={() => { onTabClick('faq'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'faq' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <HelpCircle className="w-5 h-5" />
+                <span className="font-mono text-xs">{isAr ? 'الأسئلة الشائعة' : 'FAQ'}</span>
+              </button>
+              <button onClick={() => { onTabClick('contact'); setShowSettings(false); }} className={`w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors text-start ${activeTab === 'contact' ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'}`}>
+                <Send className="w-5 h-5" />
+                <span className="font-mono text-xs">{isAr ? 'تواصل معنا' : 'Contact Us'}</span>
+              </button>
+
+              <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-4 mx-4" />
+              
+              <div className="px-4 pb-2">
+                <p className="font-mono text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">{t('nav.preferences')}</p>
+              </div>
+              <button
+                onClick={() => { setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'); }}
+                className="w-full flex items-center gap-3 px-6 py-3 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors text-start"
+              >
+                {theme === 'light' ? <Sun className="w-5 h-5" /> : theme === 'dark' ? <Moon className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+                <span className="font-mono text-xs capitalize">{theme} Theme</span>
+              </button>
+              <button
+                onClick={() => { setLanguage(language === 'en' ? 'ar' : 'en'); setShowSettings(false); }}
+                className="w-full flex items-center gap-3 px-6 py-3 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors text-start"
+              >
+                <Globe className="w-5 h-5" />
+                <span className="font-mono text-xs">{language === 'en' ? 'العربية' : 'English'}</span>
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 };

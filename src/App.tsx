@@ -10,35 +10,39 @@ import { FeedbackWidget } from './components/FeedbackWidget';
 import { LandingPage } from './views/LandingPage';
 import { Changelog } from './views/Changelog';
 import { Legal } from './views/Legal';
+import { FAQ } from './views/FAQ';
+import { Contact } from './views/Contact';
+import { About } from './views/About';
+import { IntegrationsSettings } from './views/IntegrationsSettings';
+import { FilePickerDashboard } from './views/FilePicker';
 import { useLanguage } from './contexts/LanguageContext';
 import { useTheme, Theme } from './contexts/ThemeContext';
 import { getSessionId, cleanupExpiredSessions, clearSession } from './lib/session';
 import { saveReportToBackend, getReportsFromBackend, clearBackendReports, migrateLegacyReports } from './lib/storage';
+import { AnimatePresence } from 'framer-motion';
 
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { HistoryList } from './components/HistoryList';
+import { SearchModal } from './components/SearchModal';
+
+import { BottomNav } from './components/BottomNav';
+import { SEO } from "./components/SEO";
 
 export default function App() {
   const [isBetaAccessGranted, setIsBetaAccessGranted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'runner' | 'history' | 'how-it-works' | 'changelog' | 'legal'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'runner' | 'history' | 'integrations' | 'file-picker' | 'how-it-works' | 'changelog' | 'legal' | 'faq' | 'contact' | 'about'>('dashboard');
   const [reports, setReports] = useState<TestReport[]>([]);
   const [currentReportId, setCurrentReportId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [isDesktopSidebarOpen, setIsDesktopSidebarOpen] = useState(true);
+  const [runnerInitialType, setRunnerInitialType] = useState<'url' | 'file'>('url');
+  const [runnerInitialUrl, setRunnerInitialUrl] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const { dir } = useLanguage();
 
-  // Handle responsive sidebar behavior
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setIsSidebarOpen(false); 
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Handle responsive sidebar behavior is no longer needed since it's collapsible on all screens
 
   // Load history from local storage and check beta access
   useEffect(() => {
@@ -74,22 +78,34 @@ export default function App() {
 
   const currentReport = reports.find(r => r.id === currentReportId);
 
+  const handleStartScan = (options?: { inputType: 'url' | 'file'; initialUrl?: string }) => {
+    if (options) {
+      setRunnerInitialType(options.inputType);
+      setRunnerInitialUrl(options.initialUrl || '');
+    } else {
+      setRunnerInitialType('url');
+      setRunnerInitialUrl('');
+    }
+    setActiveTab('runner');
+    setCurrentReportId(null);
+    if (window.innerWidth < 768) {
+      setIsDesktopSidebarOpen(false);
+    }
+  };
+
   const handleTabClick = (tab: any) => {
     setActiveTab(tab);
     setCurrentReportId(null);
-    setIsSidebarOpen(false); 
+    if (window.innerWidth < 768) {
+      setIsDesktopSidebarOpen(false);
+    }
   };
 
   return (
-    <div className={`flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden`} dir={dir}>
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/50 dark:bg-slate-900/80 z-40 md:hidden backdrop-blur-sm transition-opacity"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+    <>
 
+      <SEO />
+    <div className={`flex h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans relative overflow-hidden`} dir={dir}>
       <Sidebar 
         activeTab={activeTab}
         currentReportId={currentReportId}
@@ -97,10 +113,11 @@ export default function App() {
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         isDesktopSidebarOpen={isDesktopSidebarOpen}
+        setIsDesktopSidebarOpen={setIsDesktopSidebarOpen}
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 bg-cyber-grid">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[var(--bg-primary)] cyber-grid-bg transition-all duration-500 ease-in-out">
         <Header 
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -109,9 +126,11 @@ export default function App() {
           currentReportId={currentReportId}
           currentReportUrl={currentReport?.url}
           activeTab={activeTab}
+          onTabClick={handleTabClick}
+          onSearchClick={() => setIsSearchOpen(true)}
         />
         
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 overflow-x-hidden relative z-0">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 overflow-x-hidden relative z-0">
           <div className="max-w-7xl mx-auto w-full h-full">
             {currentReportId && currentReport ? (
               <ReportView 
@@ -120,15 +139,25 @@ export default function App() {
                 onBack={() => setCurrentReportId(null)} 
               />
             ) : activeTab === 'dashboard' ? (
-              <Dashboard reports={reports} onStartScan={() => setActiveTab('runner')} onViewReport={(id) => setCurrentReportId(id)} />
+              <Dashboard reports={reports} onStartScan={handleStartScan} onViewReport={(id) => setCurrentReportId(id)} />
             ) : activeTab === 'runner' ? (
-              <TestRunner onComplete={saveReport} />
+              <TestRunner onComplete={saveReport} initialType={runnerInitialType} initialUrl={runnerInitialUrl} />
             ) : activeTab === 'how-it-works' ? (
               <HowItWorks />
             ) : activeTab === 'changelog' ? (
               <Changelog />
             ) : activeTab === 'legal' ? (
               <Legal />
+            ) : activeTab === 'faq' ? (
+              <FAQ />
+            ) : activeTab === 'contact' ? (
+              <Contact />
+            ) : activeTab === 'about' ? (
+              <About />
+            ) : activeTab === 'integrations' ? (
+              <IntegrationsSettings />
+            ) : activeTab === 'file-picker' ? (
+              <FilePickerDashboard />
             ) : (
               <HistoryList 
                 reports={reports}
@@ -137,11 +166,31 @@ export default function App() {
               />
             )}
           </div>
-        </div>
-      </main>
 
+        </div>
+
+      </main>
+      <BottomNav activeTab={activeTab} onTabClick={handleTabClick} />
       <FeedbackWidget />
+      
+      <AnimatePresence>
+        {isSearchOpen && (
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            reports={reports}
+            onNavigate={(tab, reportId) => {
+              if (reportId) {
+                setCurrentReportId(reportId);
+                setActiveTab('history');
+              } else {
+                handleTabClick(tab);
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
+    </>
   );
 }
-
