@@ -185,7 +185,7 @@ function MockAuditConsole() {
 
 export function LandingPage({ onAccessGranted }: LandingPageProps) {
   const [activePage, setActivePage] = useState<null | 'legal' | 'faq' | 'contact' | 'about'>(null);
-  const { language, dir, t } = useLanguage();
+  const { language, dir, t, setLanguage } = useLanguage();
   
   const isAr = language === 'ar';
 
@@ -226,12 +226,23 @@ export function LandingPage({ onAccessGranted }: LandingPageProps) {
               </span>
             </div>
 
-            <button
-              onClick={handleDirectAccess}
-              className="font-mono text-xs uppercase tracking-widest px-4 py-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 rounded-[var(--radius-sharp)] transition-all hover:border-zinc-900 dark:hover:border-zinc-50 active:scale-95 cursor-pointer"
-            >
-              {isAr ? 'دخول لوحة التحكم' : 'Enter Dashboard'}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setLanguage(isAr ? 'en' : 'ar')}
+                className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider px-3 py-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 rounded-[var(--radius-sharp)] transition-all hover:border-zinc-400 dark:hover:border-zinc-600 active:scale-95 cursor-pointer"
+                title={isAr ? 'Switch to English' : 'التحويل للعربية'}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span>{isAr ? 'English' : 'العربية'}</span>
+              </button>
+
+              <button
+                onClick={handleDirectAccess}
+                className="font-mono text-xs uppercase tracking-widest px-4 py-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 rounded-[var(--radius-sharp)] transition-all hover:border-zinc-900 dark:hover:border-zinc-50 active:scale-95 cursor-pointer"
+              >
+                {isAr ? 'دخول لوحة التحكم' : 'Enter Dashboard'}
+              </button>
+            </div>
           </div>
         </nav>
 
