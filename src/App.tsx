@@ -58,6 +58,16 @@ export default function App() {
     getReportsFromBackend().then(savedReports => {
       setReports(savedReports);
     });
+
+    // Global keyboard shortcut for Search Modal (CMD+K or Ctrl+K)
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
   const saveReport = async (report: TestReport) => {
@@ -128,6 +138,10 @@ export default function App() {
           activeTab={activeTab}
           onTabClick={handleTabClick}
           onSearchClick={() => setIsSearchOpen(true)}
+          onLogout={() => {
+            localStorage.removeItem('testpilot_beta_access');
+            setIsBetaAccessGranted(false);
+          }}
         />
         
         <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 overflow-x-hidden relative z-0">

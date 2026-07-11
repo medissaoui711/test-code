@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronRight, Activity, Search, Settings, Moon, Sun, Monitor, Globe, HelpCircle, ListIcon, ShieldCheck, X, Menu, LayoutDashboard, History, Info, Send } from 'lucide-react';
+import { ChevronRight, Activity, Search, Settings, Moon, Sun, Monitor, Globe, HelpCircle, ListIcon, ShieldCheck, X, Menu, LayoutDashboard, History, Info, Send, User, LogOut } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,7 @@ interface HeaderProps {
   activeTab: string;
   onTabClick: (tab: any) => void;
   onSearchClick: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,10 +23,13 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onTabClick,
   onSearchClick,
+  onLogout,
 }) => {
   const { language, setLanguage, dir, t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const isAr = language === 'ar';
 
   const getTabLabel = () => {
@@ -89,6 +93,102 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Menu className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* User Profile Avatar / Login Button */}
+        <div className="relative flex items-center">
+          {isLoggedIn ? (
+            <button
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="flex items-center gap-2 p-1 rounded-full border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+              title={isAr ? 'ملف المستخدم' : 'User Profile'}
+            >
+              <img
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces&q=80"
+                alt="User Avatar"
+                referrerPolicy="no-referrer"
+                className="w-7 h-7 rounded-full object-cover border border-zinc-300 dark:border-zinc-700"
+              />
+              <span className="hidden md:inline text-[10px] font-mono font-medium text-zinc-600 dark:text-zinc-400 px-1">
+                contacteinfo
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsLoggedIn(true)}
+              className="flex items-center gap-1.5 px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-mono font-bold uppercase tracking-wider transition-colors active:scale-95 border border-cyan-500"
+            >
+              <User className="w-3 h-3" />
+              <span>{isAr ? 'تسجيل الدخول' : 'Log In'}</span>
+            </button>
+          )}
+
+          {/* User Dropdown Menu */}
+          <AnimatePresence>
+            {isLoggedIn && showUserDropdown && (
+              <>
+                {/* Backdrop to close */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowUserDropdown(false)}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ duration: 0.15 }}
+                  className={`absolute ${isAr ? 'left-0' : 'right-0'} top-full mt-2 w-64 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl p-4 z-50`}
+                >
+                  <div className="flex items-center gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                    <img
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces&q=80"
+                      alt="User Avatar"
+                      referrerPolicy="no-referrer"
+                      className="w-9 h-9 rounded-full object-cover border border-zinc-300 dark:border-zinc-700"
+                    />
+                    <div className="min-w-0 text-start">
+                      <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                        {isAr ? 'المطور contacteinfo' : 'Developer contacteinfo'}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 font-mono truncate">
+                        contacteinfo71@gmail.com
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="py-2 space-y-1">
+                    <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-zinc-500">
+                      <span>{isAr ? 'الحالة:' : 'Status:'}</span>
+                      <span className="flex items-center gap-1 text-emerald-500">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                        {isAr ? 'نشط' : 'Active'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between px-2 py-1 text-[10px] font-mono text-zinc-500">
+                      <span>{isAr ? 'الدور:' : 'Role:'}</span>
+                      <span className="text-cyan-500">{isAr ? 'مختبر بيتا' : 'Beta Tester'}</span>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1" />
+
+                  <button
+                    onClick={() => {
+                      setIsLoggedIn(false);
+                      setShowUserDropdown(false);
+                      if (onLogout) {
+                        onLogout();
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-mono text-rose-600 dark:text-rose-400 hover:bg-rose-100/50 dark:hover:bg-rose-950/20 transition-colors text-start"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'تسجيل الخروج' : 'Log Out'}</span>
+                  </button>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </header>
